@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>こころの貯金箱 V3.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes breath { 0%, 100% { transform: scale(1); opacity: 0.2; } 50% { transform: scale(1.4); opacity: 0.05; } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-breath { animation: breath 6s infinite ease-in-out; }
+        body { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #10b981; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body class="bg-[#fcfaf2] text-stone-800 transition-colors duration-500">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const App = () => {
+            const [tab, setTab] = useState('home');
+            const [isDark, setIsDark] = useState(() => localStorage.getItem('ml_dark') === 'true');
+            const [ents, setEnts] = useState(() => JSON.parse(localStorage.getItem('ml_ents')) || []);
+            const [waves, setWaves] = useState(() => JSON.parse(localStorage.getItem('ml_waves')) || []);
+            const [vals, setVals] = useState(() => JSON.parse(localStorage.getItem('ml_vals')) || [{ id: '1', domain: '生活', content: '海老名の空を眺めて、呼吸を整える', progress: 85 }]);
+            const [gts, setGts] = useState(() => JSON.parse(localStorage.getItem('ml_gts')) || []);
+            const [user, setUser] = useState(() => localStorage.getItem('ml_user') || 'マサキ');
+            const [menu, setMenu] = useState(false);
+
+            const [breathe, setBreathe] = useState({ on: false, mins: 5, left: 300, phase: 'ready', prog: 0 });
+            const [gtIn, setGtIn] = useState(['', '', '']);
+            const [showGtHist, setShowGtHist] = useState(false);
+            const [delConf, setDelConf] = useState({ show: false, id: null, type: '' });
+
+            useEffect(() => {
+                localStorage.setItem('ml_dark', isDark);
+                localStorage.setItem('ml_ents', JSON.stringify(ents));
+                localStorage.setItem('ml_waves', JSON.stringify(waves));
+                localStorage.setItem('ml_vals', JSON.stringify(vals));
+                localStorage.setItem('ml_gts', JSON.stringify(gts));
+                localStorage.setItem('ml_user', user);
+                document.body.style.backgroundColor = isDark ? '#1a1a17' : '#fcfaf2';
+                lucide.createIcons();
+            }, [isDark, ents, waves, vals, gts, user, tab, showGtHist, menu]);
+
+            useEffect(() => {
+                if (!breathe.on) return;
+                const start = Date.now();
+                const timer = setInterval(() => {
+                    const elap = Math.floor((Date.now() - start) / 1000);
+                    const left = Math.max(0, breathe.mins * 60 - elap);
+                    if (left === 0) setBreathe(p => ({ ...p, on: false }));
+                    const cycle = (Date.now() - start) % 10000;
+                    setBreathe(p => ({ ...p, left, phase: cycle < 5000 ? 'in' : 'out', prog: cycle < 5000 ? cycle/5000 : (cycle-5000)/5000 }));
+                }, 50);
+                return () => clearInterval(timer);
+            }, [breathe.on]);
+
+            const th = isDark ? 
+                { bg: 'bg-[#1a1a17]', cd: 'bg-[#252521]', tx: 'text-stone-200', bd: 'border-stone-800', sub: 'text-stone-500' } : 
+                { bg: 'bg-[#fcfaf2]', cd: 'bg-white', tx: 'text-stone-800', bd: 'border-stone-100', sub: 'text-stone-400' };
+
+            const saveGt = () => {
+                if(gtIn.every(v => v.trim() !== "")) {
+                    setGts(p => [{id: Date.now(), date: new Date().toLocaleDateString(), items: [...gtIn]}, ...p]);
+                    setGtIn(['', '', '']);
+                    setShowGtHist(true);
+                }
+            };
+
+            const delItem = () => {
+                if(delConf.type === 'e') setEnts(p => p.filter(x => x.id !== delConf.id));
+                if(delConf.type === 'v') setVals(p => p.filter(x => x.id !== delConf.id));
+                if(delConf.type === 'g') setGts(p => p.filter(x => x.id !== delConf.id));
+                setDelConf({ show: false, id: null, type: '' });
+            };
+
+            return (
+                <div className={`min-h-screen ${th.tx} flex flex-col transition-colors duration-500 pb-24`}>
+                    <header className={`p-5 ${th.cd} border-b ${th.bd} flex justify-between items-center sticky top-0 z-40`}>
+                        <div className="flex items-center gap-2" onClick={() => setTab('home')}>
+                            <div className="bg-emerald-600 p-2 rounded-lg"><i data-lucide="smile" className="text-white w-5 h-5"></i></div>
+                            <h1 className="font-black text-sm leading-none">こころの<br/>貯金箱</h1>
+                        </div>
+                        <button onClick={() => setMenu(true)} className="p-2 opacity-50"><i data-lucide="menu"></i></button>
+                    </header>
+
+                    <main className="flex-1 p-5 max-w-lg mx-auto w-full">
+                        {tab === 'home' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="py-4"><h2 className="text-2xl font-black tracking-tighter">おかえり、{user}。</h2><p className={`text-sm font-bold ${th.sub}`}>今日はどの扉を開く？</p></div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { id: 'ledger', l: '日誌', i: 'message-square', c: 'text-blue-500', b: 'bg-blue-50' },
+                                        { id: 'wave', l: '気分の波', i: 'activity', c: 'text-amber-500', b: 'bg-amber-50' },
+                                        { id: 'values', l: '羅針盤', i: 'compass', c: 'text-purple-500', b: 'bg-purple-50' },
+                                        { id: 'gt', l: '三つ星', i: 'star', c: 'text-yellow-500', b: 'bg-yellow-50' },
+                                        { id: 'breathe', l: '呼吸', i: 'wind', c: 'text-emerald-500', b: 'bg-emerald-50' },
+                                        { id: 'form', l: '仕組み', i: 'brain-circuit', c: 'text-indigo-500', b: 'bg-indigo-50' }
+                                    ].map(n => (
+                                        <button key={n.id} onClick={() => setTab(n.id)} className={`p-6 rounded-[2.5rem] ${isDark ? 'bg-stone-800/40' : n.b} flex flex-col items-start active:scale-95 transition-transform`}>
+                                            <div className={`p-3 rounded-2xl bg-white shadow-sm mb-4 ${n.c}`}><i data-lucide={n.i}></i></div>
+                                            <span className="font-black text-sm">{n.l}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === 'gt' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="flex justify-between items-center"><h2 className="text-xl font-black">三つ星日記</h2><button onClick={() => setShowGtHist(!showGtHist)} className="opacity-50"><i data-lucide={showGtHist ? 'plus' : 'history'}></i></button></div>
+                                {!showGtHist ? (
+                                    <div className="space-y-4">
+                                        {gtIn.map((v, i) => (
+                                            <input key={i} value={v} onChange={e => {const n=[...gtIn]; n[i]=e.target.value; setGtIn(n)}} placeholder={`良かったこと ${i+1}`} className={`w-full p-4 rounded-2xl ${th.cd} border ${th.bd} outline-none focus:ring-2 ring-yellow-400/20 font-bold`} />
+                                        ))}
+                                        <button onClick={saveGt} className="w-full bg-yellow-500 text-white p-4 rounded-2xl font-black shadow-lg shadow-yellow-500/20">星を貯金する</button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {gts.map(g => (
+                                            <div key={g.id} className={`p-5 rounded-3xl ${th.cd} border ${th.bd} relative`}>
+                                                <div className="text-[10px] font-bold mb-2 opacity-30">{g.date}</div>
+                                                {g.items.map((it, i) => <p key={i} className="text-sm font-bold leading-relaxed mb-1">・{it}</p>)}
+                                                <button onClick={() => setDelConf({show:true, id:g.id, type:'g'})} className="absolute top-4 right-4 text-stone-300"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {tab === 'breathe' && (
+                            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in space-y-8">
+                                <div className="relative flex items-center justify-center">
+                                    <div className={`absolute rounded-full bg-emerald-500/10 animate-breath ${breathe.on?'':'hidden'}`} style={{width: `${160 + (breathe.phase==='in'?breathe.prog*120:(1-breathe.prog)*120)}px`, height: `${160 + (breathe.phase==='in'?breathe.prog*120:(1-breathe.prog)*120)}px`}}></div>
+                                    <div className="relative z-10 p-10 bg-emerald-500 rounded-full shadow-2xl text-white"><i data-lucide="wind" className="w-10 h-10"></i></div>
+                                </div>
+                                <h2 className="text-3xl font-black">{breathe.on ? (breathe.phase==='in'?'大きく吸って...':'ゆっくり吐いて...') : '深呼吸'}</h2>
+                                <button onClick={() => setBreathe(p => ({...p, on: !p.on}))} className={`px-16 py-4 rounded-full font-black text-white shadow-xl ${breathe.on?'bg-rose-500 shadow-rose-500/20':'bg-emerald-600 shadow-emerald-600/20'}`}>{breathe.on ? '中断する' : 'はじめる'}</button>
+                            </div>
+                        )}
+
+                        {tab === 'ledger' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <div className="flex justify-between items-center"><h2 className="text-xl font-black">思考日誌</h2><button onClick={() => {
+                                    const c = prompt("今のモヤモヤは？");
+                                    const r = prompt("別の捉え方は？");
+                                    if(c && r) setEnts(p => [{id:Date.now(), content:c, rethought:r, isResolved:false}, ...p]);
+                                }} className="bg-emerald-600 text-white p-2 rounded-xl"><i data-lucide="plus"></i></button></div>
+                                {ents.map(e => (
+                                    <div key={e.id} className={`p-5 rounded-3xl ${th.cd} border ${th.bd}`}>
+                                        <p className={`text-xs font-bold mb-2 ${th.sub} italic`}>「{e.content}」</p>
+                                        <p className="text-sm font-bold leading-relaxed">{e.rethought}</p>
+                                        <div className="mt-4 flex justify-end gap-3">
+                                            <button onClick={() => setDelConf({show:true, id:e.id, type:'e'})} className="text-stone-300"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {/* 羅針盤・仕組み・波も同様に実装可能ですが、まずはこの基本構成を動かしましょう */}
+                    </main>
+
+                    <nav className={`fixed bottom-0 w-full ${th.cd} border-t ${th.bd} p-4 pb-8 flex justify-around rounded-t-3xl z-40`}>
+                        <button onClick={() => setTab('home')} className={tab==='home'?'text-emerald-500':'text-stone-300'}><i data-lucide="home"></i></button>
+                        <button onClick={() => setTab('ledger')} className={tab==='ledger'?'text-emerald-500':'text-stone-300'}><i data-lucide="message-square"></i></button>
+                        <button onClick={() => setTab('wave')} className={tab==='wave'?'text-emerald-500':'text-stone-300'}><i data-lucide="activity"></i></button>
+                        <button onClick={() => setTab('gt')} className={tab==='gt'?'text-emerald-500':'text-stone-300'}><i data-lucide="star"></i></button>
+                    </nav>
+
+                    {menu && (
+                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end" onClick={() => setMenu(false)}>
+                            <div className={`w-72 h-full ${th.cd} p-8 animate-slide-left`} onClick={e => e.stopPropagation()}>
+                                <div className="flex justify-between items-center mb-10"><h3 className="font-black text-xl">設定</h3><button onClick={() => setMenu(false)}><i data-lucide="x"></i></button></div>
+                                <div className="space-y-8">
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-bold">お名前</dt><input value={user} onChange={e=>setUser(e.target.value)} className={`w-full p-3 rounded-xl ${isDark?'bg-stone-800':'bg-stone-100'} outline-none font-bold`} />
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-bold">ダークモード</span>
+                                        <button onClick={() => setIsDark(!isDark)} className={`w-12 h-6 rounded-full relative ${isDark?'bg-emerald-500':'bg-stone-300'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isDark?'left-7':'left-1'}`}></div></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {delConf.show && (
+                        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+                            <div className={`${th.cd} p-8 rounded-[2.5rem] text-center w-full max-w-xs`}>
+                                <h3 className="font-black mb-6">消去しますか？</h3>
+                                <div className="flex gap-4">
+                                    <button onClick={() => setDelConf({show:false})} className={`flex-1 p-3 rounded-2xl ${isDark?'bg-stone-800':'bg-stone-100'} font-bold`}>戻る</button>
+                                    <button onClick={delItem} className="flex-1 p-3 rounded-2xl bg-rose-500 text-white font-black">消去</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
