@@ -1,272 +1,126 @@
-     <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>こころの貯金箱 V3.5</title>
+    <title>こころの貯金箱 V4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes breath { 0%, 100% { transform: scale(1); opacity: 0.2; } 50% { transform: scale(1.4); opacity: 0.05; } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        .animate-breath { animation: breath 6s infinite ease-in-out; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        body { -webkit-tap-highlight-color: transparent; transition: background-color 0.3s; }
+        body { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body class="bg-[#fcfaf2] text-stone-800 pb-24">
+<body class="bg-[#fcfaf2] text-stone-800 transition-colors duration-500">
 
-    <header id="header" class="p-5 bg-white border-b border-stone-100 flex justify-between items-center sticky top-0 z-40">
-        <div class="flex items-center gap-2" onclick="showTab('home')">
-            <div class="bg-emerald-600 p-2 rounded-lg"><i data-lucide="smile" class="text-white w-5 h-5"></i></div>
-            <h1 class="font-black text-sm leading-none">こころの<br>貯金箱</h1>
-        </div>
-        <button onclick="toggleDark()" class="p-2 opacity-50"><i data-lucide="moon" id="dark-icon"></i></button>
-    </header>
-
-    <main class="p-5 max-w-lg mx-auto w-full">
-        
-        <div id="home" class="tab-content active animate-fade-in space-y-6">
-            <div class="py-4"><h2 class="text-2xl font-black tracking-tighter" id="welcome-msg">おかえり。</h2><p class="text-sm font-bold text-stone-400">今日はどの扉を開く？</p></div>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="showTab('ledger')" class="p-6 rounded-[2.5rem] bg-blue-50 flex flex-col items-start active:scale-95 transition-transform">
-                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-blue-500"><i data-lucide="message-square"></i></div>
-                    <span class="font-black text-sm">日誌</span>
-                </button>
-                <button onclick="showTab('wave')" class="p-6 rounded-[2.5rem] bg-amber-50 flex flex-col items-start active:scale-95 transition-transform">
-                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-amber-500"><i data-lucide="activity"></i></div>
-                    <span class="font-black text-sm">気分の波</span>
-                </button>
-                <button onclick="showTab('values')" class="p-6 rounded-[2.5rem] bg-purple-50 flex flex-col items-start active:scale-95 transition-transform">
-                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-purple-500"><i data-lucide="compass"></i></div>
-                    <span class="font-black text-sm">羅針盤</span>
-                </button>
-                <button onclick="showTab('gt')" class="p-6 rounded-[2.5rem] bg-yellow-50 flex flex-col items-start active:scale-95 transition-transform">
-                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-yellow-500"><i data-lucide="star"></i></div>
-                    <span class="font-black text-sm">三つ星</span>
-                </button>
-                <button onclick="showTab('breathe')" class="p-6 rounded-[2.5rem] bg-emerald-50 flex flex-col items-start active:scale-95 transition-transform">
-                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-emerald-500"><i data-lucide="wind"></i></div>
-                    <span class="font-black text-sm">呼吸</span>
-                </button>
-                <button onclick="showTab('form')" class="p-6 rounded-[2.5rem] bg-indigo-50 flex flex-col items-start active:scale-95 transition-transform">
-                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-indigo-500"><i data-lucide="brain-circuit"></i></div>
-                    <span class="font-black text-sm">仕組み</span>
-                </button>
+    <div id="app-container" class="pb-24">
+        <header class="p-5 bg-white border-b border-stone-100 flex justify-between items-center sticky top-0 z-40 shadow-sm">
+            <div class="flex items-center gap-2" onclick="showTab('home')">
+                <div class="bg-emerald-600 p-2 rounded-lg text-white"><i data-lucide="smile" class="w-5 h-5"></i></div>
+                <h1 class="font-black text-sm leading-none">こころの<br>貯金箱</h1>
             </div>
-        </div>
+            <button onclick="toggleDark()" class="p-2 opacity-50"><i data-lucide="moon" id="dark-icon"></i></button>
+        </header>
 
-        <div id="gt" class="tab-content animate-fade-in space-y-6">
-            <div class="flex justify-between items-center"><h2 class="text-xl font-black">三つ星日記</h2></div>
-            <div id="gt-inputs" class="space-y-4">
-                <input type="text" id="gt-1" placeholder="良かったこと 1" class="w-full p-4 rounded-2xl bg-white border border-stone-100 outline-none font-bold">
-                <input type="text" id="gt-2" placeholder="良かったこと 2" class="w-full p-4 rounded-2xl bg-white border border-stone-100 outline-none font-bold">
-                <input type="text" id="gt-3" placeholder="良かったこと 3" class="w-full p-4 rounded-2xl bg-white border border-stone-100 outline-none font-bold">
-                <button onclick="saveGt()" class="w-full bg-yellow-500 text-white p-4 rounded-2xl font-black">星を貯金する</button>
+        <main class="p-5 max-w-lg mx-auto w-full">
+            <div id="home" class="tab-content active animate-fade-in space-y-6">
+                <div class="py-4"><h2 class="text-2xl font-black tracking-tighter" id="welcome-msg">次はどうする？</h2><p class="text-sm font-bold text-stone-400">マサキ専用エディション</p></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="showTab('ledger')" class="p-6 rounded-[2rem] bg-blue-50 flex flex-col items-start active:scale-95 transition-transform border border-blue-100">
+                        <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-blue-500"><i data-lucide="message-square"></i></div>
+                        <span class="font-black text-sm">思考日誌</span>
+                    </button>
+                    <button onclick="showTab('wave')" class="p-6 rounded-[2rem] bg-amber-50 flex flex-col items-start active:scale-95 transition-transform border border-amber-100">
+                        <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-amber-500"><i data-lucide="activity"></i></div>
+                        <span class="font-black text-sm">気分の波</span>
+                    </button>
+                    <button onclick="showTab('values')" class="p-6 rounded-[2rem] bg-purple-50 flex flex-col items-start active:scale-95 transition-transform border border-purple-100">
+                        <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-purple-500"><i data-lucide="compass"></i></div>
+                        <span class="font-black text-sm">羅針盤</span>
+                    </button>
+                    <button onclick="showTab('gt')" class="p-6 rounded-[2rem] bg-yellow-50 flex flex-col items-start active:scale-95 transition-transform border border-yellow-100">
+                        <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-yellow-500"><i data-lucide="star"></i></div>
+                        <span class="font-black text-sm">三つ星日記</span>
+                    </button>
+                    <button onclick="showTab('breathe')" class="p-6 rounded-[2rem] bg-emerald-50 flex flex-col items-start active:scale-95 transition-transform border border-emerald-100">
+                        <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-emerald-500"><i data-lucide="wind"></i></div>
+                        <span class="font-black text-sm">マインドフル</span>
+                    </button>
+                    <button onclick="showTab('form')" class="p-6 rounded-[2rem] bg-indigo-50 flex flex-col items-start active:scale-95 transition-transform border border-indigo-100">
+                        <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-indigo-500"><i data-lucide="brain-circuit"></i></div>
+                        <span class="font-black text-sm">心の仕組み</span>
+                    </button>
+                </div>
             </div>
-            <div id="gt-list" class="space-y-4 pt-4"></div>
-        </div>
 
-        <div id="breathe" class="tab-content animate-fade-in text-center space-y-8 py-10">
-            <div class="relative flex items-center justify-center mx-auto">
-                <div id="breath-circle" class="absolute rounded-full bg-emerald-500/10 animate-breath hidden" style="width: 200px; height: 200px;"></div>
-                <div class="relative z-10 p-10 bg-emerald-500 rounded-full shadow-2xl text-white"><i data-lucide="wind" class="w-10 h-10"></i></div>
+            <div id="gt" class="tab-content animate-fade-in space-y-6">
+                <h2 class="text-xl font-black">三つ星日記</h2>
+                <div id="gt-list" class="space-y-4"></div>
+                <button onclick="saveGtPrompt()" class="w-full bg-yellow-500 text-white p-4 rounded-2xl font-black">星を貯める</button>
             </div>
-            <h2 id="breath-text" class="text-3xl font-black">深呼吸</h2>
-            <button id="breath-btn" onclick="toggleBreathe()" class="px-16 py-4 rounded-full font-black text-white bg-emerald-600 shadow-xl">はじめる</button>
-        </div>
 
-        <div id="ledger" class="tab-content animate-fade-in space-y-4">
-            <div class="flex justify-between items-center"><h2 class="text-xl font-black">思考日誌</h2><button onclick="addLedger()" class="bg-emerald-600 text-white p-2 rounded-xl"><i data-lucide="plus"></i></button></div>
-            <div id="ledger-list" class="space-y-4"></div>
-        </div>
+            <div id="ledger" class="tab-content animate-fade-in space-y-4">
+                <div class="flex justify-between items-center"><h2 class="text-xl font-black">思考日誌</h2><button onclick="addLedgerPrompt()" class="bg-blue-600 text-white p-2 rounded-xl"><i data-lucide="plus"></i></button></div>
+                <div id="ledger-list" class="space-y-4"></div>
+            </div>
+            
+            <div id="wave" class="tab-content animate-fade-in space-y-6">
+                <h2 class="text-xl font-black">気分の波</h2>
+                <p class="text-stone-400 font-bold text-sm">スマホを縦にして見ると綺麗だよ。</p>
+                </div>
+        </main>
 
-    </main>
-
-    <nav class="fixed bottom-0 w-full bg-white border-t border-stone-100 p-4 pb-8 flex justify-around rounded-t-3xl z-40">
-        <button onclick="showTab('home')" class="text-stone-300 active:text-emerald-500"><i data-lucide="home"></i></button>
-        <button onclick="showTab('ledger')" class="text-stone-300 active:text-emerald-500"><i data-lucide="message-square"></i></button>
-        <button onclick="showTab('gt')" class="text-stone-300 active:text-emerald-500"><i data-lucide="star"></i></button>
-    </nav>
+        <nav class="fixed bottom-0 w-full bg-white border-t border-stone-100 p-4 pb-8 flex justify-around rounded-t-[2.5rem] z-40 shadow-[0_-5px_15px_rgba(0,0,0,0.02)]">
+            <button onclick="showTab('home')" class="p-2 text-stone-300 active:text-emerald-500"><i data-lucide="home"></i></button>
+            <button onclick="showTab('ledger')" class="p-2 text-stone-300 active:text-emerald-500"><i data-lucide="message-square"></i></button>
+            <button onclick="showTab('gt')" class="p-2 text-stone-300 active:text-emerald-500"><i data-lucide="star"></i></button>
+        </nav>
+    </div>
 
     <script>
-        // --- データ管理 ---
-        let state = {
-            isDark: localStorage.getItem('ml_dark') === 'true',
-            gts: JSON.parse(localStorage.getItem('ml_gts')) || [],
-            ents: JSON.parse(localStorage.getItem('ml_ents')) || [],
-            breatheOn: false
+        // --- 状態管理：LocalStorageに直結 ---
+        let data = {
+            ents: JSON.parse(localStorage.getItem('m_ents')) || [],
+            gts: JSON.parse(localStorage.getItem('m_gts')) || []
         };
 
-        // --- 初期化 ---
-        function init() {
-            if (state.isDark) document.body.classList.add('dark-mode'); 
-            renderGts();
-            renderLedger();
-            lucide.createIcons();
-        }
-
-        // --- タブ切り替え ---
-        function showTab(tabId) {
+        // タブの切り替え
+        function showTab(id) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+            document.getElementById(id).classList.add('active');
+            lucide.createIcons(); // アイコン再描画
             window.scrollTo(0,0);
         }
 
-        // --- 三つ星日記 ---
-        function saveGt() {
-            const items = [
-                document.getElementById('gt-1').value,
-                document.getElementById('gt-2').value,
-                document.getElementById('gt-3').value
-            ];
-            if (items.some(i => i === "")) return;
-            state.gts.unshift({ id: Date.now(), date: new Date().toLocaleDateString(), items });
-            localStorage.setItem('ml_gts', JSON.stringify(state.gts));
-            renderGts();
-            document.getElementById('gt-1').value = "";
-            document.getElementById('gt-2').value = "";
-            document.getElementById('gt-3').value = "";
-        }
-
-        function renderGts() {
-            const list = document.getElementById('gt-list');
-            list.innerHTML = state.gts.map(g => `
-                <div class="p-5 rounded-3xl bg-white border border-stone-100 shadow-sm animate-fade-in">
-                    <div class="text-[10px] font-bold opacity-30 mb-2">${g.date}</div>
-                    ${g.items.map(it => `<p class="text-sm font-bold leading-relaxed">・${it}</p>`).join('')}
-                </div>
-            `).join('');
-        }
-
-        // --- 呼吸 ---
-        let breathTimer;
-        function toggleBreathe() {
-            state.breatheOn = !state.breatheOn;
-            const btn = document.getElementById('breath-btn');
-            const circle = document.getElementById('breath-circle');
-            const text = document.getElementById('breath-text');
-            
-            if (state.breatheOn) {
-                btn.innerText = "終了する";
-                btn.classList.replace('bg-emerald-600', 'bg-rose-500');
-                circle.classList.remove('hidden');
-                let count = 0;
-                breathTimer = setInterval(() => {
-                    count++;
-                    text.innerText = (count % 10 < 5) ? "大きく吸って..." : "ゆっくり吐いて...";
-                }, 5000);
-            } else {
-                clearInterval(breathTimer);
-                btn.innerText = "はじめる";
-                btn.classList.replace('bg-rose-500', 'bg-emerald-600');
-                circle.classList.add('hidden');
-                text.innerText = "深呼吸";
-            }
-        }
-
-        // --- 日誌 ---
-        function addLedger() {
-            const c = prompt("モヤモヤする考えは？");
-            const r = prompt("別の捉え方は？");
+        // 日誌の追加（剥き出しを防ぐためシンプルなPrompt方式）
+        function addLedgerPrompt() {
+            const c = prompt("今のモヤモヤは？");
+            const r = prompt("別の考え方は？");
             if (c && r) {
-                state.ents.unshift({ id: Date.now(), content: c, rethought: r });
-                localStorage.setItem('ml_ents', JSON.stringify(state.ents));
+                data.ents.unshift({ id: Date.now(), content: c, rethought: r });
+                localStorage.setItem('m_ents', JSON.stringify(data.ents));
                 renderLedger();
             }
         }
 
         function renderLedger() {
             const list = document.getElementById('ledger-list');
-            list.innerHTML = state.ents.map(e => `
-                <div class="p-5 rounded-3xl bg-white border border-stone-100">
+            list.innerHTML = data.ents.map(e => `
+                <div class="p-5 rounded-3xl bg-white border border-stone-100 shadow-sm">
                     <p class="text-xs font-bold text-stone-400 italic mb-2">「${e.content}」</p>
                     <p class="text-sm font-bold leading-relaxed">${e.rethought}</p>
                 </div>
             `).join('');
         }
 
-        init();
-    </script>
-</body>
-</html>
-                   )}
-
-                        {tab === 'breathe' && (
-                            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in space-y-8">
-                                <div className="relative flex items-center justify-center">
-                                    <div className={`absolute rounded-full bg-emerald-500/10 animate-breath ${breathe.on?'':'hidden'}`} style={{width: `${160 + (breathe.phase==='in'?breathe.prog*120:(1-breathe.prog)*120)}px`, height: `${160 + (breathe.phase==='in'?breathe.prog*120:(1-breathe.prog)*120)}px`}}></div>
-                                    <div className="relative z-10 p-10 bg-emerald-500 rounded-full shadow-2xl text-white"><i data-lucide="wind" className="w-10 h-10"></i></div>
-                                </div>
-                                <h2 className="text-3xl font-black">{breathe.on ? (breathe.phase==='in'?'大きく吸って...':'ゆっくり吐いて...') : '深呼吸'}</h2>
-                                <button onClick={() => setBreathe(p => ({...p, on: !p.on}))} className={`px-16 py-4 rounded-full font-black text-white shadow-xl ${breathe.on?'bg-rose-500 shadow-rose-500/20':'bg-emerald-600 shadow-emerald-600/20'}`}>{breathe.on ? '中断する' : 'はじめる'}</button>
-                            </div>
-                        )}
-
-                        {tab === 'ledger' && (
-                            <div className="space-y-4 animate-fade-in">
-                                <div className="flex justify-between items-center"><h2 className="text-xl font-black">思考日誌</h2><button onClick={() => {
-                                    const c = prompt("今のモヤモヤは？");
-                                    const r = prompt("別の捉え方は？");
-                                    if(c && r) setEnts(p => [{id:Date.now(), content:c, rethought:r, isResolved:false}, ...p]);
-                                }} className="bg-emerald-600 text-white p-2 rounded-xl"><i data-lucide="plus"></i></button></div>
-                                {ents.map(e => (
-                                    <div key={e.id} className={`p-5 rounded-3xl ${th.cd} border ${th.bd}`}>
-                                        <p className={`text-xs font-bold mb-2 ${th.sub} italic`}>「{e.content}」</p>
-                                        <p className="text-sm font-bold leading-relaxed">{e.rethought}</p>
-                                        <div className="mt-4 flex justify-end gap-3">
-                                            <button onClick={() => setDelConf({show:true, id:e.id, type:'e'})} className="text-stone-300"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        {/* 羅針盤・仕組み・波も同様に実装可能ですが、まずはこの基本構成を動かしましょう */}
-                    </main>
-
-                    <nav className={`fixed bottom-0 w-full ${th.cd} border-t ${th.bd} p-4 pb-8 flex justify-around rounded-t-3xl z-40`}>
-                        <button onClick={() => setTab('home')} className={tab==='home'?'text-emerald-500':'text-stone-300'}><i data-lucide="home"></i></button>
-                        <button onClick={() => setTab('ledger')} className={tab==='ledger'?'text-emerald-500':'text-stone-300'}><i data-lucide="message-square"></i></button>
-                        <button onClick={() => setTab('wave')} className={tab==='wave'?'text-emerald-500':'text-stone-300'}><i data-lucide="activity"></i></button>
-                        <button onClick={() => setTab('gt')} className={tab==='gt'?'text-emerald-500':'text-stone-300'}><i data-lucide="star"></i></button>
-                    </nav>
-
-                    {menu && (
-                        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end" onClick={() => setMenu(false)}>
-                            <div className={`w-72 h-full ${th.cd} p-8 animate-slide-left`} onClick={e => e.stopPropagation()}>
-                                <div className="flex justify-between items-center mb-10"><h3 className="font-black text-xl">設定</h3><button onClick={() => setMenu(false)}><i data-lucide="x"></i></button></div>
-                                <div className="space-y-8">
-                                    <div className="space-y-4">
-                                        <label className="text-sm font-bold">お名前</dt><input value={user} onChange={e=>setUser(e.target.value)} className={`w-full p-3 rounded-xl ${isDark?'bg-stone-800':'bg-stone-100'} outline-none font-bold`} />
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-sm font-bold">ダークモード</span>
-                                        <button onClick={() => setIsDark(!isDark)} className={`w-12 h-6 rounded-full relative ${isDark?'bg-emerald-500':'bg-stone-300'}`}><div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isDark?'left-7':'left-1'}`}></div></button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {delConf.show && (
-                        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-                            <div className={`${th.cd} p-8 rounded-[2.5rem] text-center w-full max-w-xs`}>
-                                <h3 className="font-black mb-6">消去しますか？</h3>
-                                <div className="flex gap-4">
-                                    <button onClick={() => setDelConf({show:false})} className={`flex-1 p-3 rounded-2xl ${isDark?'bg-stone-800':'bg-stone-100'} font-bold`}>戻る</button>
-                                    <button onClick={delItem} className="flex-1 p-3 rounded-2xl bg-rose-500 text-white font-black">消去</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
+        // 初期化
+        window.onload = function() {
+            renderLedger();
+            lucide.createIcons();
         };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
     </script>
 </body>
 </html>
