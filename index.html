@@ -1,143 +1,198 @@
-<!DOCTYPE html>
+     <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>こころの貯金箱 V3.2</title>
+    <title>こころの貯金箱 V3.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes breath { 0%, 100% { transform: scale(1); opacity: 0.2; } 50% { transform: scale(1.4); opacity: 0.05; } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
         .animate-breath { animation: breath 6s infinite ease-in-out; }
-        body { -webkit-tap-highlight-color: transparent; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #10b981; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        body { -webkit-tap-highlight-color: transparent; transition: background-color 0.3s; }
     </style>
 </head>
-<body class="bg-[#fcfaf2] text-stone-800 transition-colors duration-500">
-    <div id="root"></div>
+<body class="bg-[#fcfaf2] text-stone-800 pb-24">
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+    <header id="header" class="p-5 bg-white border-b border-stone-100 flex justify-between items-center sticky top-0 z-40">
+        <div class="flex items-center gap-2" onclick="showTab('home')">
+            <div class="bg-emerald-600 p-2 rounded-lg"><i data-lucide="smile" class="text-white w-5 h-5"></i></div>
+            <h1 class="font-black text-sm leading-none">こころの<br>貯金箱</h1>
+        </div>
+        <button onclick="toggleDark()" class="p-2 opacity-50"><i data-lucide="moon" id="dark-icon"></i></button>
+    </header>
 
-        const App = () => {
-            const [tab, setTab] = useState('home');
-            const [isDark, setIsDark] = useState(() => localStorage.getItem('ml_dark') === 'true');
-            const [ents, setEnts] = useState(() => JSON.parse(localStorage.getItem('ml_ents')) || []);
-            const [waves, setWaves] = useState(() => JSON.parse(localStorage.getItem('ml_waves')) || []);
-            const [vals, setVals] = useState(() => JSON.parse(localStorage.getItem('ml_vals')) || [{ id: '1', domain: '生活', content: '海老名の空を眺めて、呼吸を整える', progress: 85 }]);
-            const [gts, setGts] = useState(() => JSON.parse(localStorage.getItem('ml_gts')) || []);
-            const [user, setUser] = useState(() => localStorage.getItem('ml_user') || 'マサキ');
-            const [menu, setMenu] = useState(false);
+    <main class="p-5 max-w-lg mx-auto w-full">
+        
+        <div id="home" class="tab-content active animate-fade-in space-y-6">
+            <div class="py-4"><h2 class="text-2xl font-black tracking-tighter" id="welcome-msg">おかえり。</h2><p class="text-sm font-bold text-stone-400">今日はどの扉を開く？</p></div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="showTab('ledger')" class="p-6 rounded-[2.5rem] bg-blue-50 flex flex-col items-start active:scale-95 transition-transform">
+                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-blue-500"><i data-lucide="message-square"></i></div>
+                    <span class="font-black text-sm">日誌</span>
+                </button>
+                <button onclick="showTab('wave')" class="p-6 rounded-[2.5rem] bg-amber-50 flex flex-col items-start active:scale-95 transition-transform">
+                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-amber-500"><i data-lucide="activity"></i></div>
+                    <span class="font-black text-sm">気分の波</span>
+                </button>
+                <button onclick="showTab('values')" class="p-6 rounded-[2.5rem] bg-purple-50 flex flex-col items-start active:scale-95 transition-transform">
+                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-purple-500"><i data-lucide="compass"></i></div>
+                    <span class="font-black text-sm">羅針盤</span>
+                </button>
+                <button onclick="showTab('gt')" class="p-6 rounded-[2.5rem] bg-yellow-50 flex flex-col items-start active:scale-95 transition-transform">
+                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-yellow-500"><i data-lucide="star"></i></div>
+                    <span class="font-black text-sm">三つ星</span>
+                </button>
+                <button onclick="showTab('breathe')" class="p-6 rounded-[2.5rem] bg-emerald-50 flex flex-col items-start active:scale-95 transition-transform">
+                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-emerald-500"><i data-lucide="wind"></i></div>
+                    <span class="font-black text-sm">呼吸</span>
+                </button>
+                <button onclick="showTab('form')" class="p-6 rounded-[2.5rem] bg-indigo-50 flex flex-col items-start active:scale-95 transition-transform">
+                    <div class="p-3 rounded-2xl bg-white shadow-sm mb-4 text-indigo-500"><i data-lucide="brain-circuit"></i></div>
+                    <span class="font-black text-sm">仕組み</span>
+                </button>
+            </div>
+        </div>
 
-            const [breathe, setBreathe] = useState({ on: false, mins: 5, left: 300, phase: 'ready', prog: 0 });
-            const [gtIn, setGtIn] = useState(['', '', '']);
-            const [showGtHist, setShowGtHist] = useState(false);
-            const [delConf, setDelConf] = useState({ show: false, id: null, type: '' });
+        <div id="gt" class="tab-content animate-fade-in space-y-6">
+            <div class="flex justify-between items-center"><h2 class="text-xl font-black">三つ星日記</h2></div>
+            <div id="gt-inputs" class="space-y-4">
+                <input type="text" id="gt-1" placeholder="良かったこと 1" class="w-full p-4 rounded-2xl bg-white border border-stone-100 outline-none font-bold">
+                <input type="text" id="gt-2" placeholder="良かったこと 2" class="w-full p-4 rounded-2xl bg-white border border-stone-100 outline-none font-bold">
+                <input type="text" id="gt-3" placeholder="良かったこと 3" class="w-full p-4 rounded-2xl bg-white border border-stone-100 outline-none font-bold">
+                <button onclick="saveGt()" class="w-full bg-yellow-500 text-white p-4 rounded-2xl font-black">星を貯金する</button>
+            </div>
+            <div id="gt-list" class="space-y-4 pt-4"></div>
+        </div>
 
-            useEffect(() => {
-                localStorage.setItem('ml_dark', isDark);
-                localStorage.setItem('ml_ents', JSON.stringify(ents));
-                localStorage.setItem('ml_waves', JSON.stringify(waves));
-                localStorage.setItem('ml_vals', JSON.stringify(vals));
-                localStorage.setItem('ml_gts', JSON.stringify(gts));
-                localStorage.setItem('ml_user', user);
-                document.body.style.backgroundColor = isDark ? '#1a1a17' : '#fcfaf2';
-                lucide.createIcons();
-            }, [isDark, ents, waves, vals, gts, user, tab, showGtHist, menu]);
+        <div id="breathe" class="tab-content animate-fade-in text-center space-y-8 py-10">
+            <div class="relative flex items-center justify-center mx-auto">
+                <div id="breath-circle" class="absolute rounded-full bg-emerald-500/10 animate-breath hidden" style="width: 200px; height: 200px;"></div>
+                <div class="relative z-10 p-10 bg-emerald-500 rounded-full shadow-2xl text-white"><i data-lucide="wind" class="w-10 h-10"></i></div>
+            </div>
+            <h2 id="breath-text" class="text-3xl font-black">深呼吸</h2>
+            <button id="breath-btn" onclick="toggleBreathe()" class="px-16 py-4 rounded-full font-black text-white bg-emerald-600 shadow-xl">はじめる</button>
+        </div>
 
-            useEffect(() => {
-                if (!breathe.on) return;
-                const start = Date.now();
-                const timer = setInterval(() => {
-                    const elap = Math.floor((Date.now() - start) / 1000);
-                    const left = Math.max(0, breathe.mins * 60 - elap);
-                    if (left === 0) setBreathe(p => ({ ...p, on: false }));
-                    const cycle = (Date.now() - start) % 10000;
-                    setBreathe(p => ({ ...p, left, phase: cycle < 5000 ? 'in' : 'out', prog: cycle < 5000 ? cycle/5000 : (cycle-5000)/5000 }));
-                }, 50);
-                return () => clearInterval(timer);
-            }, [breathe.on]);
+        <div id="ledger" class="tab-content animate-fade-in space-y-4">
+            <div class="flex justify-between items-center"><h2 class="text-xl font-black">思考日誌</h2><button onclick="addLedger()" class="bg-emerald-600 text-white p-2 rounded-xl"><i data-lucide="plus"></i></button></div>
+            <div id="ledger-list" class="space-y-4"></div>
+        </div>
 
-            const th = isDark ? 
-                { bg: 'bg-[#1a1a17]', cd: 'bg-[#252521]', tx: 'text-stone-200', bd: 'border-stone-800', sub: 'text-stone-500' } : 
-                { bg: 'bg-[#fcfaf2]', cd: 'bg-white', tx: 'text-stone-800', bd: 'border-stone-100', sub: 'text-stone-400' };
+    </main>
 
-            const saveGt = () => {
-                if(gtIn.every(v => v.trim() !== "")) {
-                    setGts(p => [{id: Date.now(), date: new Date().toLocaleDateString(), items: [...gtIn]}, ...p]);
-                    setGtIn(['', '', '']);
-                    setShowGtHist(true);
-                }
-            };
+    <nav class="fixed bottom-0 w-full bg-white border-t border-stone-100 p-4 pb-8 flex justify-around rounded-t-3xl z-40">
+        <button onclick="showTab('home')" class="text-stone-300 active:text-emerald-500"><i data-lucide="home"></i></button>
+        <button onclick="showTab('ledger')" class="text-stone-300 active:text-emerald-500"><i data-lucide="message-square"></i></button>
+        <button onclick="showTab('gt')" class="text-stone-300 active:text-emerald-500"><i data-lucide="star"></i></button>
+    </nav>
 
-            const delItem = () => {
-                if(delConf.type === 'e') setEnts(p => p.filter(x => x.id !== delConf.id));
-                if(delConf.type === 'v') setVals(p => p.filter(x => x.id !== delConf.id));
-                if(delConf.type === 'g') setGts(p => p.filter(x => x.id !== delConf.id));
-                setDelConf({ show: false, id: null, type: '' });
-            };
+    <script>
+        // --- データ管理 ---
+        let state = {
+            isDark: localStorage.getItem('ml_dark') === 'true',
+            gts: JSON.parse(localStorage.getItem('ml_gts')) || [],
+            ents: JSON.parse(localStorage.getItem('ml_ents')) || [],
+            breatheOn: false
+        };
 
-            return (
-                <div className={`min-h-screen ${th.tx} flex flex-col transition-colors duration-500 pb-24`}>
-                    <header className={`p-5 ${th.cd} border-b ${th.bd} flex justify-between items-center sticky top-0 z-40`}>
-                        <div className="flex items-center gap-2" onClick={() => setTab('home')}>
-                            <div className="bg-emerald-600 p-2 rounded-lg"><i data-lucide="smile" className="text-white w-5 h-5"></i></div>
-                            <h1 className="font-black text-sm leading-none">こころの<br/>貯金箱</h1>
-                        </div>
-                        <button onClick={() => setMenu(true)} className="p-2 opacity-50"><i data-lucide="menu"></i></button>
-                    </header>
+        // --- 初期化 ---
+        function init() {
+            if (state.isDark) document.body.classList.add('dark-mode'); 
+            renderGts();
+            renderLedger();
+            lucide.createIcons();
+        }
 
-                    <main className="flex-1 p-5 max-w-lg mx-auto w-full">
-                        {tab === 'home' && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="py-4"><h2 className="text-2xl font-black tracking-tighter">おかえり、{user}。</h2><p className={`text-sm font-bold ${th.sub}`}>今日はどの扉を開く？</p></div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {[
-                                        { id: 'ledger', l: '日誌', i: 'message-square', c: 'text-blue-500', b: 'bg-blue-50' },
-                                        { id: 'wave', l: '気分の波', i: 'activity', c: 'text-amber-500', b: 'bg-amber-50' },
-                                        { id: 'values', l: '羅針盤', i: 'compass', c: 'text-purple-500', b: 'bg-purple-50' },
-                                        { id: 'gt', l: '三つ星', i: 'star', c: 'text-yellow-500', b: 'bg-yellow-50' },
-                                        { id: 'breathe', l: '呼吸', i: 'wind', c: 'text-emerald-500', b: 'bg-emerald-50' },
-                                        { id: 'form', l: '仕組み', i: 'brain-circuit', c: 'text-indigo-500', b: 'bg-indigo-50' }
-                                    ].map(n => (
-                                        <button key={n.id} onClick={() => setTab(n.id)} className={`p-6 rounded-[2.5rem] ${isDark ? 'bg-stone-800/40' : n.b} flex flex-col items-start active:scale-95 transition-transform`}>
-                                            <div className={`p-3 rounded-2xl bg-white shadow-sm mb-4 ${n.c}`}><i data-lucide={n.i}></i></div>
-                                            <span className="font-black text-sm">{n.l}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+        // --- タブ切り替え ---
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            window.scrollTo(0,0);
+        }
 
-                        {tab === 'gt' && (
-                            <div className="space-y-6 animate-fade-in">
-                                <div className="flex justify-between items-center"><h2 className="text-xl font-black">三つ星日記</h2><button onClick={() => setShowGtHist(!showGtHist)} className="opacity-50"><i data-lucide={showGtHist ? 'plus' : 'history'}></i></button></div>
-                                {!showGtHist ? (
-                                    <div className="space-y-4">
-                                        {gtIn.map((v, i) => (
-                                            <input key={i} value={v} onChange={e => {const n=[...gtIn]; n[i]=e.target.value; setGtIn(n)}} placeholder={`良かったこと ${i+1}`} className={`w-full p-4 rounded-2xl ${th.cd} border ${th.bd} outline-none focus:ring-2 ring-yellow-400/20 font-bold`} />
-                                        ))}
-                                        <button onClick={saveGt} className="w-full bg-yellow-500 text-white p-4 rounded-2xl font-black shadow-lg shadow-yellow-500/20">星を貯金する</button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {gts.map(g => (
-                                            <div key={g.id} className={`p-5 rounded-3xl ${th.cd} border ${th.bd} relative`}>
-                                                <div className="text-[10px] font-bold mb-2 opacity-30">{g.date}</div>
-                                                {g.items.map((it, i) => <p key={i} className="text-sm font-bold leading-relaxed mb-1">・{it}</p>)}
-                                                <button onClick={() => setDelConf({show:true, id:g.id, type:'g'})} className="absolute top-4 right-4 text-stone-300"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
+        // --- 三つ星日記 ---
+        function saveGt() {
+            const items = [
+                document.getElementById('gt-1').value,
+                document.getElementById('gt-2').value,
+                document.getElementById('gt-3').value
+            ];
+            if (items.some(i => i === "")) return;
+            state.gts.unshift({ id: Date.now(), date: new Date().toLocaleDateString(), items });
+            localStorage.setItem('ml_gts', JSON.stringify(state.gts));
+            renderGts();
+            document.getElementById('gt-1').value = "";
+            document.getElementById('gt-2').value = "";
+            document.getElementById('gt-3').value = "";
+        }
+
+        function renderGts() {
+            const list = document.getElementById('gt-list');
+            list.innerHTML = state.gts.map(g => `
+                <div class="p-5 rounded-3xl bg-white border border-stone-100 shadow-sm animate-fade-in">
+                    <div class="text-[10px] font-bold opacity-30 mb-2">${g.date}</div>
+                    ${g.items.map(it => `<p class="text-sm font-bold leading-relaxed">・${it}</p>`).join('')}
+                </div>
+            `).join('');
+        }
+
+        // --- 呼吸 ---
+        let breathTimer;
+        function toggleBreathe() {
+            state.breatheOn = !state.breatheOn;
+            const btn = document.getElementById('breath-btn');
+            const circle = document.getElementById('breath-circle');
+            const text = document.getElementById('breath-text');
+            
+            if (state.breatheOn) {
+                btn.innerText = "終了する";
+                btn.classList.replace('bg-emerald-600', 'bg-rose-500');
+                circle.classList.remove('hidden');
+                let count = 0;
+                breathTimer = setInterval(() => {
+                    count++;
+                    text.innerText = (count % 10 < 5) ? "大きく吸って..." : "ゆっくり吐いて...";
+                }, 5000);
+            } else {
+                clearInterval(breathTimer);
+                btn.innerText = "はじめる";
+                btn.classList.replace('bg-rose-500', 'bg-emerald-600');
+                circle.classList.add('hidden');
+                text.innerText = "深呼吸";
+            }
+        }
+
+        // --- 日誌 ---
+        function addLedger() {
+            const c = prompt("モヤモヤする考えは？");
+            const r = prompt("別の捉え方は？");
+            if (c && r) {
+                state.ents.unshift({ id: Date.now(), content: c, rethought: r });
+                localStorage.setItem('ml_ents', JSON.stringify(state.ents));
+                renderLedger();
+            }
+        }
+
+        function renderLedger() {
+            const list = document.getElementById('ledger-list');
+            list.innerHTML = state.ents.map(e => `
+                <div class="p-5 rounded-3xl bg-white border border-stone-100">
+                    <p class="text-xs font-bold text-stone-400 italic mb-2">「${e.content}」</p>
+                    <p class="text-sm font-bold leading-relaxed">${e.rethought}</p>
+                </div>
+            `).join('');
+        }
+
+        init();
+    </script>
+</body>
+</html>
+                   )}
 
                         {tab === 'breathe' && (
                             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in space-y-8">
